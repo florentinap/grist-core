@@ -1883,6 +1883,19 @@ export class FlexServer implements GristServer {
     const probes = new BootProbes(this.app, this, '/api', adminMiddleware);
     probes.addEndpoints();
 
+    this.app.post('/api/admin/restart', requireInstallAdmin, expressWrap(async (req, resp) => {
+      const newEnv = req.body.newEnv;
+      resp.on('finish', () => {
+        // If we have IPC with parent process (e.g. when running under
+        // Docker) tell the parent that we have a new environment so it
+        // can restart us.
+        if (process.send) {
+          process.send({ newEnv });
+        }
+      });
+      return resp.status(200).send();
+    }));
+
     // Restrict this endpoint to install admins
     this.app.get('/api/install/prefs', requireInstallAdmin, expressWrap(async (_req, resp) => {
       const activation = await this._activations.current();
