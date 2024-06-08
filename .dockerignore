@@ -13,4 +13,5 @@
 !plugins
 !test
 !ext
+!docker-runner.mjs
 **/_build
